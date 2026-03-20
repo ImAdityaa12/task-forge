@@ -135,6 +135,7 @@ export const useStore = create<AppState>((set, get) => ({
       if (!res.ok) throw new Error();
       const ticket = await res.json();
       set({ tickets: [...get().tickets, ticket] });
+      toast.success("Ticket created");
     } catch {
       toast.error("Failed to create ticket");
     }
@@ -170,6 +171,7 @@ export const useStore = create<AppState>((set, get) => ({
     try {
       const res = await fetch(`/api/tickets/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
+      toast.success("Ticket deleted");
     } catch {
       set({ tickets: prev });
       toast.error("Failed to delete ticket");
@@ -186,6 +188,7 @@ export const useStore = create<AppState>((set, get) => ({
       if (!res.ok) throw new Error();
       const status = await res.json();
       set({ statuses: [...get().statuses, status] });
+      toast.success("Status created");
     } catch {
       toast.error("Failed to create status");
     }
@@ -230,6 +233,7 @@ export const useStore = create<AppState>((set, get) => ({
     try {
       const res = await fetch(`/api/statuses/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
+      toast.success("Status deleted");
     } catch {
       set({ statuses: prev });
       toast.error("Failed to delete status");
@@ -270,6 +274,7 @@ export const useStore = create<AppState>((set, get) => ({
       if (!res.ok) throw new Error();
       const assignee = await res.json();
       set({ assignees: [...get().assignees, assignee] });
+      toast.success("Assignee added");
     } catch {
       toast.error("Failed to create assignee");
     }
@@ -336,6 +341,7 @@ export const useStore = create<AppState>((set, get) => ({
     try {
       const res = await fetch(`/api/assignees/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
+      toast.success("Assignee removed");
     } catch {
       set({ assignees: prev });
       toast.error("Failed to delete assignee");
@@ -363,6 +369,7 @@ export const useStore = create<AppState>((set, get) => ({
       if (!res.ok) throw new Error();
       const comment = await res.json();
       set({ comments: [...get().comments, comment] });
+      toast.success("Comment added");
     } catch {
       toast.error("Failed to add comment");
     }
@@ -407,6 +414,7 @@ export const useStore = create<AppState>((set, get) => ({
     try {
       const res = await fetch(`/api/comments/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
+      toast.success("Comment deleted");
     } catch {
       set({ comments: prev });
       toast.error("Failed to delete comment");
