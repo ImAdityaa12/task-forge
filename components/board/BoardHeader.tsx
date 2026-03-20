@@ -41,7 +41,9 @@ export function BoardHeader() {
           onValueChange={(v) => setFilterAssigneeId(v === "all" ? null : v)}
         >
           <SelectTrigger className="w-[160px] h-8 text-xs">
-            <SelectValue placeholder="All assignees" />
+            {filterAssigneeId
+              ? assignees.find((a) => a.id === filterAssigneeId)?.name ?? "All assignees"
+              : "All assignees"}
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All assignees</SelectItem>

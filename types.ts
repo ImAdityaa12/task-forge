@@ -48,3 +48,19 @@ export interface CreateAssigneeInput {
   email?: string;
   avatarUrl?: string;
 }
+
+export interface Comment {
+  id: string;
+  userId: string;
+  ticketId: string;
+  parentCommentId: string | null;
+  content: string;
+  authorName: string;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface CreateCommentInput {
+  content: string;
+  parentCommentId?: string;
+}

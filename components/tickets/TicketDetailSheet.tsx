@@ -32,6 +32,7 @@ import {
 import { PriorityBadge } from "./PriorityBadge";
 import { AssigneeCommand } from "@/components/assignees/AssigneeCommand";
 import { AssigneeAvatar } from "@/components/assignees/AssigneeAvatar";
+import { CommentSection } from "@/components/comments/CommentSection";
 import { useStore } from "@/store/useStore";
 import { Trash2 } from "lucide-react";
 import { format } from "date-fns";
@@ -130,7 +131,20 @@ export function TicketDetailSheet() {
                   onValueChange={(v) => saveField("statusId", v)}
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    {(() => {
+                      const current = statuses.find((s) => s.id === ticket.statusId);
+                      return current ? (
+                        <span className="flex items-center gap-2">
+                          <span
+                            className="size-2 rounded-full shrink-0"
+                            style={{ backgroundColor: current.color || "#6b7280" }}
+                          />
+                          {current.name}
+                        </span>
+                      ) : (
+                        <SelectValue />
+                      );
+                    })()}
                   </SelectTrigger>
                   <SelectContent>
                     {statuses.map((s) => (
@@ -188,6 +202,9 @@ export function TicketDetailSheet() {
                   Updated: {formatDate(ticket.updatedAt)}
                 </p>
               </div>
+
+              {/* Comments */}
+              <CommentSection ticketId={ticket.id} />
 
               {/* Delete */}
               <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>

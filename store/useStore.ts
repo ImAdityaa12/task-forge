@@ -4,15 +4,18 @@ import type {
   Status,
   Ticket,
   Assignee,
+  Comment,
   CreateTicketInput,
   CreateStatusInput,
   CreateAssigneeInput,
+  CreateCommentInput,
 } from "@/types";
 
 interface AppState {
   statuses: Status[];
   tickets: Ticket[];
   assignees: Assignee[];
+  comments: Comment[];
 
   activeTicketId: string | null;
   selectedTicketId: string | null;
@@ -41,12 +44,17 @@ interface AppState {
   createAssignee: (data: CreateAssigneeInput) => Promise<void>;
   updateAssignee: (id: string, data: Partial<Assignee>) => Promise<void>;
   deleteAssignee: (id: string) => Promise<void>;
+  fetchComments: (ticketId: string) => Promise<void>;
+  createComment: (ticketId: string, data: CreateCommentInput) => Promise<void>;
+  updateComment: (id: string, content: string) => Promise<void>;
+  deleteComment: (id: string) => Promise<void>;
 }
 
 export const useStore = create<AppState>((set, get) => ({
   statuses: [],
   tickets: [],
   assignees: [],
+  comments: [],
 
   activeTicketId: null,
   selectedTicketId: null,
@@ -303,6 +311,77 @@ export const useStore = create<AppState>((set, get) => ({
     } catch {
       set({ assignees: prev });
       toast.error("Failed to delete assignee");
+    }
+  },
+
+  fetchComments: async (ticketId) => {
+    try {
+      const res = await fetch(`/api/tickets/${ticketId}/comments`);
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      set({ comments: data });
+    } catch {
+      toast.error("Failed to load comments");
+    }
+  },
+
+  createComment: async (ticketId, data) => {
+    try {
+      const res = await fetch(`/api/tickets/${ticketId}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error();
+      const comment = await res.json();
+      set({ comments: [...get().comments, comment] });
+    } catch {
+      toast.error("Failed to add comment");
+    }
+  },
+
+  updateComment: async (id, content) => {
+    const prev = get().comments;
+    set({
+      comments: prev.map((c) => (c.id === id ? { ...c, content } : c)),
+    });
+
+    try {
+      const res = await fetch(`/api/comments/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content }),
+      });
+      if (!res.ok) throw new Error();
+      const updated = await res.json();
+      set({
+        comments: get().comments.map((c) => (c.id === id ? updated : c)),
+      });
+    } catch {
+      set({ comments: prev });
+      toast.error("Failed to update comment");
+    }
+  },
+
+  deleteComment: async (id) => {
+    const prev = get().comments;
+    // Remove the comment and all its descendants
+    const idsToRemove = new Set<string>();
+    function collectChildren(parentId: string) {
+      idsToRemove.add(parentId);
+      for (const c of prev) {
+        if (c.parentCommentId === parentId) collectChildren(c.id);
+      }
+    }
+    collectChildren(id);
+    set({ comments: prev.filter((c) => !idsToRemove.has(c.id)) });
+
+    try {
+      const res = await fetch(`/api/comments/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+    } catch {
+      set({ comments: prev });
+      toast.error("Failed to delete comment");
     }
   },
 }));
