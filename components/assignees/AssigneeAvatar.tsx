@@ -27,9 +27,12 @@ export function AssigneeAvatar({
     );
   }
 
+  const dicebearUrl = `https://api.dicebear.com/9.x/bottts-neutral/svg?seed=${encodeURIComponent(assignee.name)}`;
+  const src = assignee.avatarUrl || dicebearUrl;
+
   return (
     <Avatar className={cn(sizeClass, className)}>
-      {assignee.avatarUrl && <AvatarImage src={assignee.avatarUrl} alt={assignee.name} />}
+      <AvatarImage src={src} alt={assignee.name} />
       <AvatarFallback
         style={{ backgroundColor: hashStringToColor(assignee.name) }}
         className="text-white font-medium"
