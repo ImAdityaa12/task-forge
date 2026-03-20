@@ -14,7 +14,8 @@
       "Bash(mkdir:*)",
       "Bash(npm install:*)",
       "Bash(npx drizzle-kit:*)",
-      "Bash(npx next:*)"
+      "Bash(npx next:*)",
+      "Bash(npx shadcn@latest:*)"
     ]
   }
 }
