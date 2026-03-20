@@ -41,7 +41,7 @@ export function AssigneeCommand({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
-        render={<span className="inline-flex cursor-pointer" />}
+        render={<button className="inline-flex cursor-pointer" type="button" />}
         onClick={(e) => e.stopPropagation()}
       >
         {children}
