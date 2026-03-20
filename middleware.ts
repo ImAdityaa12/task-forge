@@ -8,6 +8,8 @@ export async function middleware(request: NextRequest) {
   const isPublicPath = publicPaths.some((p) => pathname.startsWith(p));
   const isAuthApi = pathname.startsWith("/api/auth");
 
+  const isApiRoute = pathname.startsWith("/api/");
+
   if (isPublicPath || isAuthApi) {
     return NextResponse.next();
   }
@@ -17,6 +19,10 @@ export async function middleware(request: NextRequest) {
     request.cookies.get("better-auth.session_token")?.value;
 
   if (!sessionToken) {
+    // API routes return 401 JSON instead of redirect
+    if (isApiRoute) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const loginUrl = new URL("/login", request.url);
     return NextResponse.redirect(loginUrl);
   }
