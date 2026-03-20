@@ -15,7 +15,9 @@
       "Bash(npm install:*)",
       "Bash(npx drizzle-kit:*)",
       "Bash(npx next:*)",
-      "Bash(npx shadcn@latest:*)"
+      "Bash(npx shadcn@latest:*)",
+      "Bash(DOTENV_CONFIG_PATH=.env.local npx drizzle-kit:*)",
+      "Bash(curl:*)"
     ]
   }
 }
