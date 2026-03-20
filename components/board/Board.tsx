@@ -19,6 +19,7 @@ import {
 } from "@dnd-kit/sortable";
 import { StatusColumn } from "./StatusColumn";
 import { CreateStatusPopover } from "./CreateStatusPopover";
+import { BoardSkeleton } from "./BoardSkeleton";
 import { TicketCard } from "./TicketCard";
 import { useStore } from "@/store/useStore";
 import type { Ticket } from "@/types";
@@ -164,8 +165,13 @@ export function Board() {
     }
   }
 
+  const isLoading = useStore((s) => s.isLoading);
   const sortedStatuses = [...statuses].sort((a, b) => a.position - b.position);
   const columnSortIds = sortedStatuses.map((s) => `column-sort-${s.id}`);
+
+  if (isLoading && statuses.length === 0) {
+    return <BoardSkeleton />;
+  }
 
   return (
     <DndContext
