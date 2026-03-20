@@ -27,7 +27,15 @@ export interface Assignee {
   name: string;
   avatarUrl: string | null;
   email: string | null;
+  linkedUserId: string | null;
   createdAt: string | null;
+}
+
+export interface AppUser {
+  id: string;
+  name: string;
+  email: string;
+  image: string | null;
 }
 
 export interface CreateTicketInput {

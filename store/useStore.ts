@@ -4,6 +4,7 @@ import type {
   Status,
   Ticket,
   Assignee,
+  AppUser,
   Comment,
   CreateTicketInput,
   CreateStatusInput,
@@ -44,6 +45,7 @@ interface AppState {
   createAssignee: (data: CreateAssigneeInput) => Promise<void>;
   updateAssignee: (id: string, data: Partial<Assignee>) => Promise<void>;
   deleteAssignee: (id: string) => Promise<void>;
+  assignAppUser: (appUser: AppUser) => Promise<string>;
   fetchComments: (ticketId: string) => Promise<void>;
   createComment: (ticketId: string, data: CreateCommentInput) => Promise<void>;
   updateComment: (id: string, content: string) => Promise<void>;
@@ -294,6 +296,32 @@ export const useStore = create<AppState>((set, get) => ({
       set({ assignees: prev });
       toast.error("Failed to update assignee");
     }
+  },
+
+  assignAppUser: async (appUser) => {
+    // Check if already linked
+    const existing = get().assignees.find(
+      (a) => a.linkedUserId === appUser.id
+    );
+    if (existing) return existing.id;
+
+    const res = await fetch("/api/assignees", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: appUser.name,
+        email: appUser.email,
+        avatarUrl: appUser.image,
+        linkedUserId: appUser.id,
+      }),
+    });
+    if (!res.ok) throw new Error("Failed to create assignee from app user");
+    const assignee: Assignee = await res.json();
+    // Only add to store if not already present (server dedup may return existing)
+    if (!get().assignees.find((a) => a.id === assignee.id)) {
+      set({ assignees: [...get().assignees, assignee] });
+    }
+    return assignee.id;
   },
 
   deleteAssignee: async (id) => {

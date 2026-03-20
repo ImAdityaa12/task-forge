@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AssigneeAvatar } from "./AssigneeAvatar";
 import { useStore } from "@/store/useStore";
-import { Plus, Pencil, Trash2, Users } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, Globe } from "lucide-react";
 import type { Assignee } from "@/types";
 
 export function AssigneeManager() {
@@ -93,7 +93,12 @@ export function AssigneeManager() {
                 >
                   <AssigneeAvatar assignee={a} size="md" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{a.name}</p>
+                    <p className="text-sm font-medium truncate flex items-center gap-1.5">
+                      {a.name}
+                      {a.linkedUserId && (
+                        <Globe className="size-3 text-muted-foreground shrink-0" />
+                      )}
+                    </p>
                     {a.email && (
                       <p className="text-xs text-muted-foreground truncate">
                         {a.email}

@@ -73,6 +73,9 @@ export const assignees = pgTable("assignees", {
   name: text("name").notNull(),
   avatarUrl: text("avatar_url"),
   email: text("email"),
+  linkedUserId: text("linked_user_id").references(() => user.id, {
+    onDelete: "set null",
+  }),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
