@@ -75,7 +75,7 @@ export function AssigneeManager() {
           <SheetHeader>
             <SheetTitle>Manage Assignees</SheetTitle>
           </SheetHeader>
-          <div className="mt-4 space-y-2">
+          <div className="flex flex-col gap-3 px-4 pb-4 overflow-y-auto">
             <Button
               variant="outline"
               size="sm"
@@ -85,11 +85,11 @@ export function AssigneeManager() {
               <Plus className="size-4" />
               Add Assignee
             </Button>
-            <div className="space-y-1 mt-4">
+            <div className="space-y-1">
               {assignees.map((a) => (
                 <div
                   key={a.id}
-                  className="flex items-center gap-3 p-2 rounded-md hover:bg-muted"
+                  className="flex items-center gap-3 rounded-md p-2 hover:bg-muted"
                 >
                   <AssigneeAvatar assignee={a} size="md" />
                   <div className="flex-1 min-w-0">
