@@ -13,7 +13,8 @@ import {
 import { AssigneeManager } from "@/components/assignees/AssigneeManager";
 import { useStore } from "@/store/useStore";
 import { signOut } from "@/lib/auth-client";
-import { Kanban, ArrowUpDown, LogOut } from "lucide-react";
+import { useTheme } from "next-themes";
+import { Kanban, ArrowUpDown, LogOut, Sun, Moon } from "lucide-react";
 
 export function BoardHeader() {
   const router = useRouter();
@@ -22,6 +23,7 @@ export function BoardHeader() {
   const filterAssigneeId = useStore((s) => s.filterAssigneeId);
   const setFilterAssigneeId = useStore((s) => s.setFilterAssigneeId);
   const assignees = useStore((s) => s.assignees);
+  const { theme, setTheme } = useTheme();
 
   async function handleSignOut() {
     await signOut();
@@ -65,6 +67,16 @@ export function BoardHeader() {
           Priority
         </Toggle>
         <AssigneeManager />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8"
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          aria-label="Toggle theme"
+        >
+          <Sun className="size-4 hidden dark:block" />
+          <Moon className="size-4 block dark:hidden" />
+        </Button>
         <Button
           variant="ghost"
           size="icon"
