@@ -8,6 +8,15 @@ export interface Status {
   updatedAt: string | null;
 }
 
+export interface Category {
+  id: string;
+  userId: string;
+  name: string;
+  color: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
 export interface Ticket {
   id: string;
   userId: string;
@@ -15,6 +24,7 @@ export interface Ticket {
   description: string | null;
   statusId: string;
   assigneeId: string | null;
+  categoryId: string | null;
   priority: "urgent" | "high" | "medium" | "low" | "none";
   position: number;
   createdAt: string | null;
@@ -55,6 +65,11 @@ export interface CreateAssigneeInput {
   name: string;
   email?: string;
   avatarUrl?: string;
+}
+
+export interface CreateCategoryInput {
+  name: string;
+  color?: string;
 }
 
 export interface Comment {

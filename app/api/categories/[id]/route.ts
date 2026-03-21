@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { tickets } from "@/lib/schema";
+import { categories, tickets } from "@/lib/schema";
 import { eq, and } from "drizzle-orm";
 import { headers } from "next/headers";
 
@@ -13,36 +13,32 @@ export async function PATCH(
     return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
+  const userId = session.user.id;
   const body = await request.json();
 
   const [existing] = await db
     .select()
-    .from(tickets)
-    .where(eq(tickets.id, id));
+    .from(categories)
+    .where(and(eq(categories.id, id), eq(categories.userId, userId)));
 
   if (!existing) {
-    return Response.json({ error: "Ticket not found" }, { status: 404 });
+    return Response.json({ error: "Category not found" }, { status: 404 });
   }
 
   const updates: Record<string, unknown> = {};
-  if (body.title !== undefined) updates.title = body.title;
-  if (body.description !== undefined) updates.description = body.description;
-  if (body.statusId !== undefined) updates.statusId = body.statusId;
-  if (body.assigneeId !== undefined) updates.assigneeId = body.assigneeId;
-  if (body.categoryId !== undefined) updates.categoryId = body.categoryId;
-  if (body.priority !== undefined) updates.priority = body.priority;
-  if (body.position !== undefined) updates.position = body.position;
+  if (body.name !== undefined) updates.name = body.name;
+  if (body.color !== undefined) updates.color = body.color;
   updates.updatedAt = new Date();
 
   await db
-    .update(tickets)
+    .update(categories)
     .set(updates)
-    .where(eq(tickets.id, id));
+    .where(and(eq(categories.id, id), eq(categories.userId, userId)));
 
   const [updated] = await db
     .select()
-    .from(tickets)
-    .where(eq(tickets.id, id));
+    .from(categories)
+    .where(eq(categories.id, id));
 
   return Response.json(updated);
 }
@@ -60,16 +56,17 @@ export async function DELETE(
 
   const [existing] = await db
     .select()
-    .from(tickets)
-    .where(and(eq(tickets.id, id), eq(tickets.userId, userId)));
+    .from(categories)
+    .where(and(eq(categories.id, id), eq(categories.userId, userId)));
 
   if (!existing) {
-    return Response.json({ error: "Ticket not found" }, { status: 404 });
+    return Response.json({ error: "Category not found" }, { status: 404 });
   }
 
+  // Unlink tickets before deleting (cascade set null handles this via FK)
   await db
-    .delete(tickets)
-    .where(and(eq(tickets.id, id), eq(tickets.userId, userId)));
+    .delete(categories)
+    .where(and(eq(categories.id, id), eq(categories.userId, userId)));
 
   return Response.json({ success: true });
 }
