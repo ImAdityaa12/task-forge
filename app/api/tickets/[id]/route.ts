@@ -13,13 +13,12 @@ export async function PATCH(
     return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const userId = session.user.id;
   const body = await request.json();
 
   const [existing] = await db
     .select()
     .from(tickets)
-    .where(and(eq(tickets.id, id), eq(tickets.userId, userId)));
+    .where(eq(tickets.id, id));
 
   if (!existing) {
     return Response.json({ error: "Ticket not found" }, { status: 404 });
@@ -37,7 +36,7 @@ export async function PATCH(
   await db
     .update(tickets)
     .set(updates)
-    .where(and(eq(tickets.id, id), eq(tickets.userId, userId)));
+    .where(eq(tickets.id, id));
 
   const [updated] = await db
     .select()

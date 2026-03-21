@@ -14,13 +14,12 @@ export async function GET(
     return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id: ticketId } = await params;
-  const userId = session.user.id;
 
-  // Verify ticket belongs to user
+  // Verify ticket exists
   const [ticket] = await db
     .select()
     .from(tickets)
-    .where(and(eq(tickets.id, ticketId), eq(tickets.userId, userId)));
+    .where(eq(tickets.id, ticketId));
 
   if (!ticket) {
     return Response.json({ error: "Ticket not found" }, { status: 404 });
@@ -56,11 +55,11 @@ export async function POST(
   const { id: ticketId } = await params;
   const userId = session.user.id;
 
-  // Verify ticket belongs to user
+  // Verify ticket exists
   const [ticket] = await db
     .select()
     .from(tickets)
-    .where(and(eq(tickets.id, ticketId), eq(tickets.userId, userId)));
+    .where(eq(tickets.id, ticketId));
 
   if (!ticket) {
     return Response.json({ error: "Ticket not found" }, { status: 404 });

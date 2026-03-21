@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { assignees } from "@/lib/schema";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 
 export async function PATCH(
@@ -13,13 +13,12 @@ export async function PATCH(
     return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const userId = session.user.id;
   const body = await request.json();
 
   const [existing] = await db
     .select()
     .from(assignees)
-    .where(and(eq(assignees.id, id), eq(assignees.userId, userId)));
+    .where(eq(assignees.id, id));
 
   if (!existing) {
     return Response.json({ error: "Assignee not found" }, { status: 404 });
@@ -33,7 +32,7 @@ export async function PATCH(
   await db
     .update(assignees)
     .set(updates)
-    .where(and(eq(assignees.id, id), eq(assignees.userId, userId)));
+    .where(eq(assignees.id, id));
 
   const [updated] = await db
     .select()
@@ -52,12 +51,11 @@ export async function DELETE(
     return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const userId = session.user.id;
 
   const [existing] = await db
     .select()
     .from(assignees)
-    .where(and(eq(assignees.id, id), eq(assignees.userId, userId)));
+    .where(eq(assignees.id, id));
 
   if (!existing) {
     return Response.json({ error: "Assignee not found" }, { status: 404 });
@@ -65,7 +63,7 @@ export async function DELETE(
 
   await db
     .delete(assignees)
-    .where(and(eq(assignees.id, id), eq(assignees.userId, userId)));
+    .where(eq(assignees.id, id));
 
   return Response.json({ success: true });
 }

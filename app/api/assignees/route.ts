@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { assignees } from "@/lib/schema";
 import { nanoid } from "@/lib/utils";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 
 export async function GET() {
@@ -10,12 +10,9 @@ export async function GET() {
   if (!session)
     return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  const userId = session.user.id;
-
   const userAssignees = await db
     .select()
-    .from(assignees)
-    .where(eq(assignees.userId, userId));
+    .from(assignees);
 
   return Response.json(userAssignees);
 }
@@ -38,12 +35,7 @@ export async function POST(request: Request) {
     const [existing] = await db
       .select()
       .from(assignees)
-      .where(
-        and(
-          eq(assignees.userId, userId),
-          eq(assignees.linkedUserId, linkedUserId)
-        )
-      );
+      .where(eq(assignees.linkedUserId, linkedUserId));
     if (existing) return Response.json(existing, { status: 200 });
   }
 
