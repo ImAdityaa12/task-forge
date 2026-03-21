@@ -21,7 +21,6 @@ import { StatusColumn } from "./StatusColumn";
 import { CreateStatusPopover } from "./CreateStatusPopover";
 import { BoardSkeleton } from "./BoardSkeleton";
 import { TicketCard } from "./TicketCard";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useStore } from "@/store/useStore";
 import type { Ticket } from "@/types";
 
@@ -33,31 +32,6 @@ const PRIORITY_ORDER: Record<Ticket["priority"], number> = {
   none: 4,
 };
 
-function BoardSkeleton() {
-  return (
-    <div className="flex-1 overflow-x-auto p-6">
-      <div className="flex gap-4 items-start">
-        {Array.from({ length: 4 }).map((_, colIdx) => (
-          <div
-            key={colIdx}
-            className="w-[300px] shrink-0 flex flex-col gap-3"
-          >
-            <div className="flex items-center gap-2 px-1 mb-1">
-              <Skeleton className="h-5 w-24 rounded" />
-              <Skeleton className="h-5 w-6 rounded-full" />
-            </div>
-            {Array.from({ length: 3 }).map((_, cardIdx) => (
-              <Skeleton
-                key={cardIdx}
-                className="h-[88px] w-full rounded-lg"
-              />
-            ))}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 export function Board() {
   const fetchAll = useStore((s) => s.fetchAll);
@@ -193,7 +167,6 @@ export function Board() {
     }
   }
 
-  const isLoading = useStore((s) => s.isLoading);
   const sortedStatuses = [...statuses].sort((a, b) => a.position - b.position);
   const columnSortIds = sortedStatuses.map((s) => `column-sort-${s.id}`);
 
