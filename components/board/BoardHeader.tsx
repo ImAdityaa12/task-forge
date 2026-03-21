@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AssigneeManager } from "@/components/assignees/AssigneeManager";
+import { CategoryManager } from "@/components/categories/CategoryManager";
 import { useStore } from "@/store/useStore";
 import { signOut } from "@/lib/auth-client";
 import { useTheme } from "next-themes";
@@ -22,7 +23,10 @@ export function BoardHeader() {
   const setSortByPriority = useStore((s) => s.setSortByPriority);
   const filterAssigneeId = useStore((s) => s.filterAssigneeId);
   const setFilterAssigneeId = useStore((s) => s.setFilterAssigneeId);
+  const filterCategoryId = useStore((s) => s.filterCategoryId);
+  const setFilterCategoryId = useStore((s) => s.setFilterCategoryId);
   const assignees = useStore((s) => s.assignees);
+  const categories = useStore((s) => s.categories);
   const { theme, setTheme } = useTheme();
 
   async function handleSignOut() {
@@ -56,6 +60,30 @@ export function BoardHeader() {
             ))}
           </SelectContent>
         </Select>
+        <Select
+          value={filterCategoryId ?? "all"}
+          onValueChange={(v) => setFilterCategoryId(v === "all" ? null : v)}
+        >
+          <SelectTrigger className="w-[150px] h-8 text-xs">
+            {filterCategoryId
+              ? categories.find((c) => c.id === filterCategoryId)?.name ?? "All categories"
+              : "All categories"}
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All categories</SelectItem>
+            {categories.map((c) => (
+              <SelectItem key={c.id} value={c.id}>
+                <span className="flex items-center gap-2">
+                  <span
+                    className="size-2 rounded-sm shrink-0"
+                    style={{ backgroundColor: c.color || "#6b7280" }}
+                  />
+                  {c.name}
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Toggle
           pressed={sortByPriority}
           onPressedChange={setSortByPriority}
@@ -67,6 +95,7 @@ export function BoardHeader() {
           Priority
         </Toggle>
         <AssigneeManager />
+        <CategoryManager />
         <Button
           variant="ghost"
           size="icon"

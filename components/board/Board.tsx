@@ -40,6 +40,7 @@ export function Board() {
   const isLoading = useStore((s) => s.isLoading);
   const sortByPriority = useStore((s) => s.sortByPriority);
   const filterAssigneeId = useStore((s) => s.filterAssigneeId);
+  const filterCategoryId = useStore((s) => s.filterCategoryId);
   const moveTicket = useStore((s) => s.moveTicket);
   const reorderStatuses = useStore((s) => s.reorderStatuses);
 
@@ -61,8 +62,11 @@ export function Board() {
     if (filterAssigneeId) {
       result = result.filter((t) => t.assigneeId === filterAssigneeId);
     }
+    if (filterCategoryId) {
+      result = result.filter((t) => t.categoryId === filterCategoryId);
+    }
     return result;
-  }, [tickets, filterAssigneeId]);
+  }, [tickets, filterAssigneeId, filterCategoryId]);
 
   const getColumnTickets = useCallback(
     (statusId: string) => {
