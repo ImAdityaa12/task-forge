@@ -180,7 +180,7 @@ export function CategoryManager() {
           </SheetTitle>
         </SheetHeader>
 
-        <div className="mt-6 space-y-3 px-1">
+        <div className="space-y-3 px-4 pb-4">
           {categories.map((cat) =>
             editingId === cat.id ? (
               <EditRow
