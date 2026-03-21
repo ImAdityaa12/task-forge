@@ -12,14 +12,13 @@ export async function GET() {
 
   const userId = session.user.id;
 
-  let userStatuses = await db
+  let allStatuses = await db
     .select()
     .from(statuses)
-    .where(eq(statuses.userId, userId))
     .orderBy(asc(statuses.position));
 
-  // Auto-seed default statuses on first login
-  if (userStatuses.length === 0) {
+  // Auto-seed default statuses if none exist globally
+  if (allStatuses.length === 0) {
     const defaults = [
       { name: "Backlog", color: "#6b7280", position: 0 },
       { name: "To Do", color: "#6366f1", position: 1 },
@@ -37,14 +36,13 @@ export async function GET() {
       });
     }
 
-    userStatuses = await db
+    allStatuses = await db
       .select()
       .from(statuses)
-      .where(eq(statuses.userId, userId))
       .orderBy(asc(statuses.position));
   }
 
-  return Response.json(userStatuses);
+  return Response.json(allStatuses);
 }
 
 export async function POST(request: Request) {

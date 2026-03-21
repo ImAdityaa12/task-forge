@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { tickets } from "@/lib/schema";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 
 export async function PATCH(
@@ -56,12 +56,11 @@ export async function DELETE(
     return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const userId = session.user.id;
 
   const [existing] = await db
     .select()
     .from(tickets)
-    .where(and(eq(tickets.id, id), eq(tickets.userId, userId)));
+    .where(eq(tickets.id, id));
 
   if (!existing) {
     return Response.json({ error: "Ticket not found" }, { status: 404 });
@@ -69,7 +68,7 @@ export async function DELETE(
 
   await db
     .delete(tickets)
-    .where(and(eq(tickets.id, id), eq(tickets.userId, userId)));
+    .where(eq(tickets.id, id));
 
   return Response.json({ success: true });
 }
