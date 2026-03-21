@@ -67,10 +67,9 @@ export async function GET() {
   let userStatuses = await db
     .select()
     .from(statuses)
-    .where(eq(statuses.userId, userId))
     .orderBy(asc(statuses.position));
 
-  // Auto-seed default statuses + dummy data on first load
+  // Auto-seed default statuses + dummy data when none exist globally
   if (userStatuses.length === 0) {
     const defaults = [
       { name: "Backlog", color: "#6b7280", position: 0 },
@@ -99,7 +98,6 @@ export async function GET() {
     userStatuses = await db
       .select()
       .from(statuses)
-      .where(eq(statuses.userId, userId))
       .orderBy(asc(statuses.position));
   }
 
@@ -122,8 +120,7 @@ export async function POST(request: Request) {
   // Get next position
   const result = await db
     .select({ count: count() })
-    .from(statuses)
-    .where(eq(statuses.userId, userId));
+    .from(statuses);
   const nextPosition = result[0]?.count ?? 0;
 
   const id = nanoid();

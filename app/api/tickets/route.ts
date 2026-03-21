@@ -10,12 +10,9 @@ export async function GET() {
   if (!session)
     return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  const userId = session.user.id;
-
   const userTickets = await db
     .select()
     .from(tickets)
-    .where(eq(tickets.userId, userId))
     .orderBy(asc(tickets.position));
 
   return Response.json(userTickets);

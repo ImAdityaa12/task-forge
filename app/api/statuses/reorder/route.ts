@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { statuses } from "@/lib/schema";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 
 export async function PUT(request: Request) {
@@ -9,7 +9,6 @@ export async function PUT(request: Request) {
   if (!session)
     return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  const userId = session.user.id;
   const { orderedIds } = await request.json();
 
   if (!Array.isArray(orderedIds)) {
@@ -23,7 +22,7 @@ export async function PUT(request: Request) {
     await db
       .update(statuses)
       .set({ position: i, updatedAt: new Date() })
-      .where(and(eq(statuses.id, orderedIds[i]), eq(statuses.userId, userId)));
+      .where(eq(statuses.id, orderedIds[i]));
   }
 
   return Response.json({ success: true });

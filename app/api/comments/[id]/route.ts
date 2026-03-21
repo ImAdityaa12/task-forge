@@ -13,12 +13,11 @@ export async function PATCH(
     return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const userId = session.user.id;
 
   const [existing] = await db
     .select()
     .from(comments)
-    .where(and(eq(comments.id, id), eq(comments.userId, userId)));
+    .where(eq(comments.id, id));
 
   if (!existing) {
     return Response.json({ error: "Comment not found" }, { status: 404 });
@@ -34,7 +33,7 @@ export async function PATCH(
   await db
     .update(comments)
     .set({ content: content.trim(), updatedAt: new Date() })
-    .where(and(eq(comments.id, id), eq(comments.userId, userId)));
+    .where(eq(comments.id, id));
 
   const [updated] = await db
     .select({
@@ -76,12 +75,12 @@ export async function DELETE(
 
   // Delete comment and all nested replies (recursive via parentCommentId)
   // Since we don't have cascade on parentCommentId, delete children first
-  await deleteCommentTree(id, userId);
+  await deleteCommentTree(id);
 
   return Response.json({ success: true });
 }
 
-async function deleteCommentTree(commentId: string, userId: string) {
+async function deleteCommentTree(commentId: string) {
   // Find all direct children
   const children = await db
     .select()
@@ -90,11 +89,11 @@ async function deleteCommentTree(commentId: string, userId: string) {
 
   // Recursively delete children
   for (const child of children) {
-    await deleteCommentTree(child.id, userId);
+    await deleteCommentTree(child.id);
   }
 
   // Delete this comment
   await db
     .delete(comments)
-    .where(and(eq(comments.id, commentId), eq(comments.userId, userId)));
+    .where(eq(comments.id, commentId));
 }

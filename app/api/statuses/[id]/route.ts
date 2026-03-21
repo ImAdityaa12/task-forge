@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { statuses } from "@/lib/schema";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 
 export async function PATCH(
@@ -13,13 +13,12 @@ export async function PATCH(
     return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const userId = session.user.id;
   const body = await request.json();
 
   const [existing] = await db
     .select()
     .from(statuses)
-    .where(and(eq(statuses.id, id), eq(statuses.userId, userId)));
+    .where(eq(statuses.id, id));
 
   if (!existing) {
     return Response.json({ error: "Status not found" }, { status: 404 });
@@ -34,7 +33,7 @@ export async function PATCH(
   await db
     .update(statuses)
     .set(updates)
-    .where(and(eq(statuses.id, id), eq(statuses.userId, userId)));
+    .where(eq(statuses.id, id));
 
   const [updated] = await db
     .select()
@@ -53,13 +52,11 @@ export async function DELETE(
     return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
-  const userId = session.user.id;
 
   // Prevent deleting last status
   const allStatuses = await db
     .select()
-    .from(statuses)
-    .where(eq(statuses.userId, userId));
+    .from(statuses);
 
   if (allStatuses.length <= 1) {
     return Response.json(
@@ -71,7 +68,7 @@ export async function DELETE(
   const [existing] = await db
     .select()
     .from(statuses)
-    .where(and(eq(statuses.id, id), eq(statuses.userId, userId)));
+    .where(eq(statuses.id, id));
 
   if (!existing) {
     return Response.json({ error: "Status not found" }, { status: 404 });
@@ -79,7 +76,7 @@ export async function DELETE(
 
   await db
     .delete(statuses)
-    .where(and(eq(statuses.id, id), eq(statuses.userId, userId)));
+    .where(eq(statuses.id, id));
 
   return Response.json({ success: true });
 }

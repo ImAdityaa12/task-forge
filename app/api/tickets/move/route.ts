@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { tickets } from "@/lib/schema";
-import { eq, and, asc } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 import { headers } from "next/headers";
 
 export async function PUT(request: Request) {
@@ -9,7 +9,6 @@ export async function PUT(request: Request) {
   if (!session)
     return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  const userId = session.user.id;
   const { ticketId, targetStatusId, newPosition } = await request.json();
 
   if (!ticketId || !targetStatusId || newPosition === undefined) {
@@ -19,11 +18,11 @@ export async function PUT(request: Request) {
     );
   }
 
-  // Verify ticket belongs to user
+  // Verify ticket exists
   const [ticket] = await db
     .select()
     .from(tickets)
-    .where(and(eq(tickets.id, ticketId), eq(tickets.userId, userId)));
+    .where(eq(tickets.id, ticketId));
 
   if (!ticket) {
     return Response.json({ error: "Ticket not found" }, { status: 404 });
@@ -43,9 +42,7 @@ export async function PUT(request: Request) {
   const columnTickets = await db
     .select()
     .from(tickets)
-    .where(
-      and(eq(tickets.statusId, targetStatusId), eq(tickets.userId, userId))
-    )
+    .where(eq(tickets.statusId, targetStatusId))
     .orderBy(asc(tickets.position));
 
   // Place moved ticket at desired position, reindex others
@@ -70,9 +67,7 @@ export async function PUT(request: Request) {
     const oldColumnTickets = await db
       .select()
       .from(tickets)
-      .where(
-        and(eq(tickets.statusId, ticket.statusId), eq(tickets.userId, userId))
-      )
+      .where(eq(tickets.statusId, ticket.statusId))
       .orderBy(asc(tickets.position));
 
     for (let i = 0; i < oldColumnTickets.length; i++) {
