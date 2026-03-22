@@ -17,8 +17,9 @@ import { AssigneeAvatar } from "@/components/assignees/AssigneeAvatar";
 import { AssigneeCommand } from "@/components/assignees/AssigneeCommand";
 import { CategoryBadge } from "@/components/categories/CategoryBadge";
 import { useStore } from "@/store/useStore";
-import { GripVertical } from "lucide-react";
+import { GripVertical, CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { format, isPast, isToday, isTomorrow } from "date-fns";
 import type { Ticket } from "@/types";
 
 const PRIORITY_BORDER: Record<Ticket["priority"], string> = {
@@ -28,6 +29,13 @@ const PRIORITY_BORDER: Record<Ticket["priority"], string> = {
   low: "border-l-[hsl(var(--priority-low))]",
   none: "border-l-transparent",
 };
+
+function formatDueDate(dateStr: string) {
+  const date = new Date(dateStr);
+  if (isToday(date)) return "Today";
+  if (isTomorrow(date)) return "Tomorrow";
+  return format(date, "MMM d");
+}
 
 interface TicketCardProps {
   ticket: Ticket;
@@ -90,6 +98,21 @@ export function TicketCard({ ticket }: TicketCardProps) {
               </p>
               {category && (
                 <CategoryBadge category={category} />
+              )}
+              {ticket.dueAt && (
+                <div
+                  className={cn(
+                    "flex items-center gap-1 text-xs",
+                    isPast(new Date(ticket.dueAt)) && !isToday(new Date(ticket.dueAt))
+                      ? "text-destructive"
+                      : isToday(new Date(ticket.dueAt))
+                        ? "text-orange-400"
+                        : "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="size-3" />
+                  {formatDueDate(ticket.dueAt)}
+                </div>
               )}
               <div className="flex items-center justify-between gap-2">
                 <PriorityBadge

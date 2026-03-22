@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 
   const userId = session.user.id;
   const body = await request.json();
-  const { title, description, statusId, assigneeId, priority } = body;
+  const { title, description, statusId, assigneeId, priority, dueAt } = body;
 
   if (!title || typeof title !== "string") {
     return Response.json({ error: "Title is required" }, { status: 400 });
@@ -51,6 +51,7 @@ export async function POST(request: Request) {
     statusId,
     assigneeId: assigneeId || null,
     priority: priority || "none",
+    dueAt: dueAt ? new Date(dueAt) : null,
     position: nextPosition,
   });
 

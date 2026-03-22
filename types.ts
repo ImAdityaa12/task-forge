@@ -26,6 +26,7 @@ export interface Ticket {
   assigneeId: string | null;
   categoryId: string | null;
   priority: "urgent" | "high" | "medium" | "low" | "none";
+  dueAt: string | null;
   position: number;
   createdAt: string | null;
   updatedAt: string | null;
@@ -54,6 +55,7 @@ export interface CreateTicketInput {
   statusId: string;
   assigneeId?: string;
   priority?: Ticket["priority"];
+  dueAt?: string;
 }
 
 export interface CreateStatusInput {

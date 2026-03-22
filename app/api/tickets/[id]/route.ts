@@ -31,6 +31,7 @@ export async function PATCH(
   if (body.assigneeId !== undefined) updates.assigneeId = body.assigneeId;
   if (body.categoryId !== undefined) updates.categoryId = body.categoryId;
   if (body.priority !== undefined) updates.priority = body.priority;
+  if (body.dueAt !== undefined) updates.dueAt = body.dueAt ? new Date(body.dueAt) : null;
   if (body.position !== undefined) updates.position = body.position;
   updates.updatedAt = new Date();
 

@@ -109,6 +109,7 @@ export const tickets = pgTable("tickets", {
   priority: text("priority", {
     enum: ["urgent", "high", "medium", "low", "none"],
   }).default("none"),
+  dueAt: timestamp("due_at"),
   position: integer("position").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
