@@ -19,7 +19,9 @@
       "Bash(DOTENV_CONFIG_PATH=.env.local npx drizzle-kit:*)",
       "Bash(curl:*)",
       "Bash(echo Cleared old data. Now fetching fresh seed...:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm:*)"
     ]
   }
 }

@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { notifyStatusChange } from "@/lib/email";
 import { tickets } from "@/lib/schema";
 import { eq, asc } from "drizzle-orm";
 import { headers } from "next/headers";
@@ -60,6 +61,18 @@ export async function PUT(request: Request) {
         .set({ position: i })
         .where(eq(tickets.id, ordered[i].id));
     }
+  }
+
+  // Notify on status change
+  if (ticket.statusId !== targetStatusId) {
+    notifyStatusChange({
+      ticketId: ticketId,
+      ticketTitle: ticket.title,
+      ticketCreatorUserId: ticket.userId,
+      ticketAssigneeId: ticket.assigneeId,
+      newStatusId: targetStatusId,
+      actorName: session.user.name,
+    });
   }
 
   // Also reindex old column if status changed
