@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { notifyAssignment } from "@/lib/email";
+import { notifyAssignment, notifyStatusChange } from "@/lib/email";
 import { tickets } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
@@ -57,6 +57,17 @@ export async function PATCH(
       ticketCreatorUserId: existing.userId,
       newAssigneeId: body.assigneeId,
       actorUserId: session.user.id,
+      actorName: session.user.name,
+    });
+  }
+
+  if (body.statusId !== undefined && body.statusId !== existing.statusId) {
+    notifyStatusChange({
+      ticketId: id,
+      ticketTitle: updated.title,
+      ticketCreatorUserId: existing.userId,
+      ticketAssigneeId: updated.assigneeId,
+      newStatusId: body.statusId,
       actorName: session.user.name,
     });
   }

@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
 import { db } from "./db";
-import { assignees, user } from "./schema";
+import { assignees, statuses, user } from "./schema";
 import { eq } from "drizzle-orm";
 
 const transporter =
@@ -197,4 +197,58 @@ async function _notifyComment(params: CommentParams) {
 
 export function notifyComment(params: CommentParams) {
   void _notifyComment(params);
+}
+
+// --- Status Change Notification ---
+
+interface StatusChangeParams {
+  ticketId: string;
+  ticketTitle: string;
+  ticketCreatorUserId: string;
+  ticketAssigneeId: string | null;
+  newStatusId: string;
+  actorName: string;
+}
+
+async function _notifyStatusChange(params: StatusChangeParams) {
+  const { ticketTitle, ticketCreatorUserId, ticketAssigneeId, newStatusId, actorName } = params;
+
+  const [status] = await db
+    .select({ name: statuses.name })
+    .from(statuses)
+    .where(eq(statuses.id, newStatusId));
+
+  const statusName = status?.name ?? newStatusId;
+
+  const recipients: string[] = [];
+
+  const creatorEmail = await resolveCreatorEmail(ticketCreatorUserId);
+  if (creatorEmail) recipients.push(creatorEmail);
+
+  if (ticketAssigneeId) {
+    const assigneeEmail = await resolveAssigneeEmail(ticketAssigneeId);
+    if (assigneeEmail && !recipients.includes(assigneeEmail)) {
+      recipients.push(assigneeEmail);
+    }
+  }
+
+  if (recipients.length === 0) return;
+
+  const subject = `Ticket status updated: ${ticketTitle}`;
+  const html = buildEmailHtml(`
+    <h2 style="font-size: 18px; margin: 0 0 16px;">Status Updated</h2>
+    <p style="margin: 0 0 8px;"><strong>${escapeHtml(actorName)}</strong> moved the ticket:</p>
+    <div style="background-color: #1a1a1a; border-left: 3px solid #6366f1; padding: 12px 16px; border-radius: 4px; margin: 12px 0;">
+      <strong>${escapeHtml(ticketTitle)}</strong>
+    </div>
+    <p style="margin: 8px 0 0;">New status: <strong>${escapeHtml(statusName)}</strong></p>
+  `);
+
+  for (const to of recipients) {
+    await sendEmail(to, subject, html);
+  }
+}
+
+export function notifyStatusChange(params: StatusChangeParams) {
+  void _notifyStatusChange(params);
 }
