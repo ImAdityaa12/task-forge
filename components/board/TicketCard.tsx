@@ -15,9 +15,11 @@ import {
 import { PriorityBadge } from "@/components/tickets/PriorityBadge";
 import { AssigneeAvatar } from "@/components/assignees/AssigneeAvatar";
 import { AssigneeCommand } from "@/components/assignees/AssigneeCommand";
+import { CategoryBadge } from "@/components/categories/CategoryBadge";
 import { useStore } from "@/store/useStore";
-import { GripVertical } from "lucide-react";
+import { GripVertical, CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { format, isPast, isToday, isTomorrow } from "date-fns";
 import type { Ticket } from "@/types";
 
 const PRIORITY_BORDER: Record<Ticket["priority"], string> = {
@@ -28,6 +30,13 @@ const PRIORITY_BORDER: Record<Ticket["priority"], string> = {
   none: "border-l-transparent",
 };
 
+function formatDueDate(dateStr: string) {
+  const date = new Date(dateStr);
+  if (isToday(date)) return "Today";
+  if (isTomorrow(date)) return "Tomorrow";
+  return format(date, "MMM d");
+}
+
 interface TicketCardProps {
   ticket: Ticket;
 }
@@ -35,11 +44,13 @@ interface TicketCardProps {
 export function TicketCard({ ticket }: TicketCardProps) {
   const statuses = useStore((s) => s.statuses);
   const assignees = useStore((s) => s.assignees);
+  const categories = useStore((s) => s.categories);
   const setSelectedTicketId = useStore((s) => s.setSelectedTicketId);
   const updateTicket = useStore((s) => s.updateTicket);
   const moveTicket = useStore((s) => s.moveTicket);
 
   const assignee = assignees.find((a) => a.id === ticket.assigneeId) ?? null;
+  const category = categories.find((c) => c.id === ticket.categoryId) ?? null;
 
   const {
     attributes,
@@ -85,6 +96,24 @@ export function TicketCard({ ticket }: TicketCardProps) {
               <p className="text-sm font-medium leading-snug truncate">
                 {ticket.title}
               </p>
+              {category && (
+                <CategoryBadge category={category} />
+              )}
+              {ticket.dueAt && (
+                <div
+                  className={cn(
+                    "flex items-center gap-1 text-xs",
+                    isPast(new Date(ticket.dueAt)) && !isToday(new Date(ticket.dueAt))
+                      ? "text-destructive"
+                      : isToday(new Date(ticket.dueAt))
+                        ? "text-orange-400"
+                        : "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="size-3" />
+                  {formatDueDate(ticket.dueAt)}
+                </div>
+              )}
               <div className="flex items-center justify-between gap-2">
                 <PriorityBadge
                   priority={ticket.priority}

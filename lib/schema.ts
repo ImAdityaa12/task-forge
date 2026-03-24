@@ -79,6 +79,17 @@ export const assignees = pgTable("assignees", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const categories = pgTable("categories", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  color: text("color").default("#6b7280"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const tickets = pgTable("tickets", {
   id: text("id").primaryKey(),
   userId: text("user_id")
@@ -92,9 +103,13 @@ export const tickets = pgTable("tickets", {
   assigneeId: text("assignee_id").references(() => assignees.id, {
     onDelete: "set null",
   }),
+  categoryId: text("category_id").references(() => categories.id, {
+    onDelete: "set null",
+  }),
   priority: text("priority", {
     enum: ["urgent", "high", "medium", "low", "none"],
   }).default("none"),
+  dueAt: timestamp("due_at"),
   position: integer("position").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

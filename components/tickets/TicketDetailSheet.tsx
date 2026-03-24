@@ -29,13 +29,22 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { PriorityBadge } from "./PriorityBadge";
 import { AssigneeCommand } from "@/components/assignees/AssigneeCommand";
 import { AssigneeAvatar } from "@/components/assignees/AssigneeAvatar";
+import { CategoryCommand } from "@/components/categories/CategoryCommand";
+import { CategoryBadge } from "@/components/categories/CategoryBadge";
 import { CommentSection } from "@/components/comments/CommentSection";
 import { useStore } from "@/store/useStore";
-import { Trash2 } from "lucide-react";
-import { format } from "date-fns";
+import { Trash2, CalendarIcon, X } from "lucide-react";
+import { format, isPast, isToday } from "date-fns";
+import { cn } from "@/lib/utils";
 import type { Ticket } from "@/types";
 
 export function TicketDetailSheet() {
@@ -44,6 +53,7 @@ export function TicketDetailSheet() {
   const tickets = useStore((s) => s.tickets);
   const statuses = useStore((s) => s.statuses);
   const assignees = useStore((s) => s.assignees);
+  const categories = useStore((s) => s.categories);
   const updateTicket = useStore((s) => s.updateTicket);
   const deleteTicket = useStore((s) => s.deleteTicket);
 
@@ -69,6 +79,7 @@ export function TicketDetailSheet() {
   );
 
   const assignee = assignees.find((a) => a.id === ticket?.assigneeId) ?? null;
+  const category = categories.find((c) => c.id === ticket?.categoryId) ?? null;
 
   function formatDate(d: string | null) {
     if (!d) return "—";
@@ -191,6 +202,83 @@ export function TicketDetailSheet() {
                     <span>{assignee?.name || "Unassigned"}</span>
                   </div>
                 </AssigneeCommand>
+              </div>
+
+              {/* Category */}
+              <div className="space-y-2">
+                <Label className="text-muted-foreground text-xs">
+                  Category
+                </Label>
+                <CategoryCommand
+                  currentCategoryId={ticket.categoryId}
+                  onSelect={(id) => saveField("categoryId", id)}
+                >
+                  <div className="flex items-center gap-2 p-2 rounded-md hover:bg-muted w-full text-left text-sm cursor-pointer">
+                    {category ? (
+                      <CategoryBadge category={category} />
+                    ) : (
+                      <span className="text-muted-foreground">No category</span>
+                    )}
+                  </div>
+                </CategoryCommand>
+              </div>
+
+              {/* Due Date */}
+              <div className="space-y-2">
+                <Label className="text-muted-foreground text-xs">
+                  Due Date
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Popover>
+                    <PopoverTrigger
+                      render={
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            "w-full justify-start text-left font-normal gap-2",
+                            !ticket.dueAt && "text-muted-foreground",
+                            ticket.dueAt &&
+                              isPast(new Date(ticket.dueAt)) &&
+                              !isToday(new Date(ticket.dueAt)) &&
+                              "text-destructive border-destructive/50"
+                          )}
+                        />
+                      }
+                    >
+                      <CalendarIcon className="size-4" />
+                      {ticket.dueAt
+                        ? format(new Date(ticket.dueAt), "MMM d, yyyy")
+                        : "Set due date"}
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={
+                          ticket.dueAt ? new Date(ticket.dueAt) : undefined
+                        }
+                        onSelect={(date) => {
+                          saveField(
+                            "dueAt",
+                            date ? date.toISOString() : null
+                          );
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {ticket.dueAt && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-8 shrink-0"
+                      onClick={() => saveField("dueAt", null)}
+                      aria-label="Clear due date"
+                    >
+                      <X className="size-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
 
               {/* Metadata */}

@@ -4,11 +4,13 @@ import type {
   Status,
   Ticket,
   Assignee,
+  Category,
   AppUser,
   Comment,
   CreateTicketInput,
   CreateStatusInput,
   CreateAssigneeInput,
+  CreateCategoryInput,
   CreateCommentInput,
 } from "@/types";
 
@@ -16,18 +18,21 @@ interface AppState {
   statuses: Status[];
   tickets: Ticket[];
   assignees: Assignee[];
+  categories: Category[];
   comments: Comment[];
 
   activeTicketId: string | null;
   selectedTicketId: string | null;
   sortByPriority: boolean;
   filterAssigneeId: string | null;
+  filterCategoryId: string | null;
   isLoading: boolean;
 
   setActiveTicketId: (id: string | null) => void;
   setSelectedTicketId: (id: string | null) => void;
   setSortByPriority: (value: boolean) => void;
   setFilterAssigneeId: (id: string | null) => void;
+  setFilterCategoryId: (id: string | null) => void;
 
   fetchAll: () => Promise<void>;
   moveTicket: (
@@ -46,6 +51,9 @@ interface AppState {
   updateAssignee: (id: string, data: Partial<Assignee>) => Promise<void>;
   deleteAssignee: (id: string) => Promise<void>;
   assignAppUser: (appUser: AppUser) => Promise<string>;
+  createCategory: (data: CreateCategoryInput) => Promise<void>;
+  updateCategory: (id: string, data: Partial<Category>) => Promise<void>;
+  deleteCategory: (id: string) => Promise<void>;
   fetchComments: (ticketId: string) => Promise<void>;
   createComment: (ticketId: string, data: CreateCommentInput) => Promise<void>;
   updateComment: (id: string, content: string) => Promise<void>;
@@ -56,39 +64,44 @@ export const useStore = create<AppState>((set, get) => ({
   statuses: [],
   tickets: [],
   assignees: [],
+  categories: [],
   comments: [],
 
   activeTicketId: null,
   selectedTicketId: null,
   sortByPriority: false,
   filterAssigneeId: null,
+  filterCategoryId: null,
   isLoading: true,
 
   setActiveTicketId: (id) => set({ activeTicketId: id }),
   setSelectedTicketId: (id) => set({ selectedTicketId: id }),
   setSortByPriority: (value) => set({ sortByPriority: value }),
   setFilterAssigneeId: (id) => set({ filterAssigneeId: id }),
+  setFilterCategoryId: (id) => set({ filterCategoryId: id }),
 
   fetchAll: async () => {
     set({ isLoading: true });
     try {
-      const [statusesRes, ticketsRes, assigneesRes] = await Promise.all([
+      const [statusesRes, ticketsRes, assigneesRes, categoriesRes] = await Promise.all([
         fetch("/api/statuses"),
         fetch("/api/tickets"),
         fetch("/api/assignees"),
+        fetch("/api/categories"),
       ]);
 
-      if (!statusesRes.ok || !ticketsRes.ok || !assigneesRes.ok) {
+      if (!statusesRes.ok || !ticketsRes.ok || !assigneesRes.ok || !categoriesRes.ok) {
         throw new Error("Failed to fetch data");
       }
 
-      const [statuses, tickets, assignees] = await Promise.all([
+      const [statuses, tickets, assignees, categories] = await Promise.all([
         statusesRes.json(),
         ticketsRes.json(),
         assigneesRes.json(),
+        categoriesRes.json(),
       ]);
 
-      set({ statuses, tickets, assignees, isLoading: false });
+      set({ statuses, tickets, assignees, categories, isLoading: false });
     } catch {
       toast.error("Failed to load board data");
       set({ isLoading: false });
@@ -135,6 +148,7 @@ export const useStore = create<AppState>((set, get) => ({
       if (!res.ok) throw new Error();
       const ticket = await res.json();
       set({ tickets: [...get().tickets, ticket] });
+      toast.success("Ticket created");
     } catch {
       toast.error("Failed to create ticket");
     }
@@ -170,6 +184,7 @@ export const useStore = create<AppState>((set, get) => ({
     try {
       const res = await fetch(`/api/tickets/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
+      toast.success("Ticket deleted");
     } catch {
       set({ tickets: prev });
       toast.error("Failed to delete ticket");
@@ -186,6 +201,7 @@ export const useStore = create<AppState>((set, get) => ({
       if (!res.ok) throw new Error();
       const status = await res.json();
       set({ statuses: [...get().statuses, status] });
+      toast.success("Status created");
     } catch {
       toast.error("Failed to create status");
     }
@@ -230,6 +246,7 @@ export const useStore = create<AppState>((set, get) => ({
     try {
       const res = await fetch(`/api/statuses/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
+      toast.success("Status deleted");
     } catch {
       set({ statuses: prev });
       toast.error("Failed to delete status");
@@ -270,6 +287,7 @@ export const useStore = create<AppState>((set, get) => ({
       if (!res.ok) throw new Error();
       const assignee = await res.json();
       set({ assignees: [...get().assignees, assignee] });
+      toast.success("Assignee added");
     } catch {
       toast.error("Failed to create assignee");
     }
@@ -336,9 +354,68 @@ export const useStore = create<AppState>((set, get) => ({
     try {
       const res = await fetch(`/api/assignees/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
+      toast.success("Assignee removed");
     } catch {
       set({ assignees: prev });
       toast.error("Failed to delete assignee");
+    }
+  },
+
+  createCategory: async (data) => {
+    try {
+      const res = await fetch("/api/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error();
+      const category = await res.json();
+      set({ categories: [...get().categories, category] });
+      toast.success("Category created");
+    } catch {
+      toast.error("Failed to create category");
+    }
+  },
+
+  updateCategory: async (id, data) => {
+    const prev = get().categories;
+    set({
+      categories: prev.map((c) => (c.id === id ? { ...c, ...data } : c)),
+    });
+
+    try {
+      const res = await fetch(`/api/categories/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error();
+      const updated = await res.json();
+      set({
+        categories: get().categories.map((c) => (c.id === id ? updated : c)),
+      });
+    } catch {
+      set({ categories: prev });
+      toast.error("Failed to update category");
+    }
+  },
+
+  deleteCategory: async (id) => {
+    const prev = get().categories;
+    set({
+      categories: prev.filter((c) => c.id !== id),
+      tickets: get().tickets.map((t) =>
+        t.categoryId === id ? { ...t, categoryId: null } : t
+      ),
+    });
+
+    try {
+      const res = await fetch(`/api/categories/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      toast.success("Category deleted");
+    } catch {
+      set({ categories: prev });
+      toast.error("Failed to delete category");
     }
   },
 
@@ -363,6 +440,7 @@ export const useStore = create<AppState>((set, get) => ({
       if (!res.ok) throw new Error();
       const comment = await res.json();
       set({ comments: [...get().comments, comment] });
+      toast.success("Comment added");
     } catch {
       toast.error("Failed to add comment");
     }
@@ -407,6 +485,7 @@ export const useStore = create<AppState>((set, get) => ({
     try {
       const res = await fetch(`/api/comments/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
+      toast.success("Comment deleted");
     } catch {
       set({ comments: prev });
       toast.error("Failed to delete comment");
