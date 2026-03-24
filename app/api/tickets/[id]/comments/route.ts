@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { notifyComment } from "@/lib/email";
 import { comments, tickets, user } from "@/lib/schema";
 import { nanoid } from "@/lib/utils";
 import { eq, and, asc } from "drizzle-orm";
@@ -111,6 +112,16 @@ export async function POST(
     .from(comments)
     .innerJoin(user, eq(comments.userId, user.id))
     .where(eq(comments.id, id));
+
+  notifyComment({
+    ticketId,
+    ticketTitle: ticket.title,
+    ticketCreatorUserId: ticket.userId,
+    ticketAssigneeId: ticket.assigneeId,
+    commenterUserId: userId,
+    commenterName: session.user.name,
+    commentContent: content.trim(),
+  });
 
   return Response.json(created, { status: 201 });
 }
