@@ -1,13 +1,22 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 import { db } from "./db";
 import { assignees, user } from "./schema";
 import { eq } from "drizzle-orm";
 
-const resend = process.env.RESEND_API_KEY
-  ? new Resend(process.env.RESEND_API_KEY)
-  : null;
+const transporter =
+  process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD
+    ? nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: Number(process.env.SMTP_PORT) || 587,
+        secure: false,
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASSWORD,
+        },
+      })
+    : null;
 
-const fromEmail = process.env.RESEND_FROM_EMAIL || "TaskForge <onboarding@resend.dev>";
+const fromEmail = process.env.SMTP_FROM ?? null;
 
 function escapeHtml(str: string): string {
   return str
@@ -19,14 +28,14 @@ function escapeHtml(str: string): string {
 }
 
 async function sendEmail(to: string, subject: string, html: string) {
-  if (!resend) {
-    console.warn("[email] RESEND_API_KEY not set, skipping email to:", to);
+  if (!transporter || !fromEmail) {
+    console.warn("[email] SMTP not configured, skipping email to:", to);
     return;
   }
   try {
     console.log("[email] Sending to:", to, "| subject:", subject);
-    const result = await resend.emails.send({ from: fromEmail, to, subject, html });
-    console.log("[email] Send result:", JSON.stringify(result));
+    const info = await transporter.sendMail({ from: fromEmail, to, subject, html });
+    console.log("[email] Sent:", info.messageId);
   } catch (err) {
     console.error("[email] Failed to send email:", err);
   }
@@ -59,14 +68,6 @@ async function resolveCreatorEmail(userId: string): Promise<string | null> {
   return creator?.email || null;
 }
 
-async function resolveActorEmail(userId: string): Promise<string | null> {
-  const [actor] = await db
-    .select({ email: user.email })
-    .from(user)
-    .where(eq(user.id, userId));
-  return actor?.email || null;
-}
-
 function buildEmailHtml(body: string): string {
   return `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; color: #e5e5e5; background-color: #0f0f0f; border-radius: 8px;">
@@ -91,26 +92,25 @@ interface AssignmentParams {
 async function _notifyAssignment(params: AssignmentParams) {
   const { ticketTitle, ticketCreatorUserId, newAssigneeId, actorUserId, actorName } = params;
 
-  const actorEmail = await resolveActorEmail(actorUserId);
-  console.log("[email:assign] actor:", actorUserId, actorEmail);
+  console.log("[email:assign] actor:", actorUserId);
 
   const recipients: string[] = [];
 
   const creatorEmail = await resolveCreatorEmail(ticketCreatorUserId);
   console.log("[email:assign] creator:", ticketCreatorUserId, creatorEmail);
-  if (creatorEmail && creatorEmail !== actorEmail) {
+  if (creatorEmail) {
     recipients.push(creatorEmail);
   }
 
   const assigneeEmail = await resolveAssigneeEmail(newAssigneeId);
   console.log("[email:assign] assignee:", newAssigneeId, assigneeEmail);
-  if (assigneeEmail && assigneeEmail !== actorEmail && !recipients.includes(assigneeEmail)) {
+  if (assigneeEmail && !recipients.includes(assigneeEmail)) {
     recipients.push(assigneeEmail);
   }
 
   console.log("[email:assign] recipients:", recipients);
   if (recipients.length === 0) {
-    console.log("[email:assign] No recipients (all excluded as actor). Skipping.");
+    console.log("[email:assign] No recipients found. Skipping.");
     return;
   }
 
@@ -154,28 +154,27 @@ async function _notifyComment(params: CommentParams) {
     commentContent,
   } = params;
 
-  const commenterEmail = await resolveActorEmail(commenterUserId);
-  console.log("[email:comment] commenter:", commenterUserId, commenterEmail);
+  console.log("[email:comment] commenter:", commenterUserId);
 
   const recipients: string[] = [];
 
   const creatorEmail = await resolveCreatorEmail(ticketCreatorUserId);
   console.log("[email:comment] creator:", ticketCreatorUserId, creatorEmail);
-  if (creatorEmail && creatorEmail !== commenterEmail) {
+  if (creatorEmail) {
     recipients.push(creatorEmail);
   }
 
   if (ticketAssigneeId) {
     const assigneeEmail = await resolveAssigneeEmail(ticketAssigneeId);
     console.log("[email:comment] assignee:", ticketAssigneeId, assigneeEmail);
-    if (assigneeEmail && assigneeEmail !== commenterEmail && !recipients.includes(assigneeEmail)) {
+    if (assigneeEmail && !recipients.includes(assigneeEmail)) {
       recipients.push(assigneeEmail);
     }
   }
 
   console.log("[email:comment] recipients:", recipients);
   if (recipients.length === 0) {
-    console.log("[email:comment] No recipients (all excluded as commenter). Skipping.");
+    console.log("[email:comment] No recipients found. Skipping.");
     return;
   }
 
