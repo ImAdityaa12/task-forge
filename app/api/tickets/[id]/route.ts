@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { notifyAssignment } from "@/lib/email";
 import { tickets } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
@@ -44,6 +45,21 @@ export async function PATCH(
     .select()
     .from(tickets)
     .where(eq(tickets.id, id));
+
+  if (
+    body.assigneeId !== undefined &&
+    body.assigneeId !== existing.assigneeId &&
+    body.assigneeId !== null
+  ) {
+    notifyAssignment({
+      ticketId: id,
+      ticketTitle: updated.title,
+      ticketCreatorUserId: existing.userId,
+      newAssigneeId: body.assigneeId,
+      actorUserId: session.user.id,
+      actorName: session.user.name,
+    });
+  }
 
   return Response.json(updated);
 }
