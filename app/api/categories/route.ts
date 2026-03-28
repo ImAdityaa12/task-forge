@@ -10,13 +10,12 @@ export async function GET() {
   if (!session)
     return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  const userCategories = await db
+  const allCategories = await db
     .select()
     .from(categories)
-    .where(eq(categories.userId, session.user.id))
     .orderBy(asc(categories.createdAt));
 
-  return Response.json(userCategories);
+  return Response.json(allCategories);
 }
 
 export async function POST(request: Request) {
