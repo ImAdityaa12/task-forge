@@ -30,9 +30,12 @@ import { TicketCard } from "./TicketCard";
 import { CreateTicketForm } from "./CreateTicketForm";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useStore } from "@/store/useStore";
-import { MoreHorizontal, Trash2, GripVertical } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { MoreHorizontal, Trash2, GripVertical, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Status, Ticket } from "@/types";
+
+const INITIAL_TICKET_CAP = 10;
 
 interface StatusColumnProps {
   status: Status;
@@ -48,6 +51,10 @@ export function StatusColumn({ status, tickets, isOver }: StatusColumnProps) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(status.name);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+
+  const hiddenCount = tickets.length - INITIAL_TICKET_CAP;
+  const visibleTickets = expanded ? tickets : tickets.slice(0, INITIAL_TICKET_CAP);
 
   const { setNodeRef: setDropRef } = useDroppable({
     id: `column-${status.id}`,
@@ -194,9 +201,20 @@ export function StatusColumn({ status, tickets, isOver }: StatusColumnProps) {
                 </p>
               </Card>
             )}
-            {tickets.map((ticket) => (
+            {visibleTickets.map((ticket) => (
               <TicketCard key={ticket.id} ticket={ticket} />
             ))}
+            {!expanded && hiddenCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full text-xs text-muted-foreground gap-1"
+                onClick={() => setExpanded(true)}
+              >
+                <ChevronDown className="size-3" />
+                Show {hiddenCount} more
+              </Button>
+            )}
           </SortableContext>
         )}
         <CreateTicketForm statusId={status.id} />

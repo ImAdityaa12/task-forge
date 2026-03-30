@@ -5,6 +5,28 @@ import { tickets } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session)
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id } = await params;
+
+  const [ticket] = await db
+    .select()
+    .from(tickets)
+    .where(eq(tickets.id, id));
+
+  if (!ticket || ticket.userId !== session.user.id) {
+    return Response.json({ error: "Ticket not found" }, { status: 404 });
+  }
+
+  return Response.json(ticket);
+}
+
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

@@ -15,7 +15,7 @@ import { CategoryManager } from "@/components/categories/CategoryManager";
 import { useStore } from "@/store/useStore";
 import { signOut } from "@/lib/auth-client";
 import { useTheme } from "next-themes";
-import { Kanban, ArrowUpDown, LogOut, Sun, Moon } from "lucide-react";
+import { Kanban, ArrowUpDown, LogOut, Sun, Moon, Tag } from "lucide-react";
 
 export function BoardHeader() {
   const router = useRouter();
@@ -96,6 +96,16 @@ export function BoardHeader() {
         </Toggle>
         <AssigneeManager />
         <CategoryManager />
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => router.push("/categories")}
+          className="gap-1.5 text-xs"
+          aria-label="View by category"
+        >
+          <Tag className="size-3.5" />
+          Categories
+        </Button>
         <Button
           variant="ghost"
           size="icon"

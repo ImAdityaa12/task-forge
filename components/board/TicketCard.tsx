@@ -17,7 +17,8 @@ import { AssigneeAvatar } from "@/components/assignees/AssigneeAvatar";
 import { AssigneeCommand } from "@/components/assignees/AssigneeCommand";
 import { CategoryBadge } from "@/components/categories/CategoryBadge";
 import { useStore } from "@/store/useStore";
-import { GripVertical, CalendarIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { GripVertical, CalendarIcon, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format, isPast, isToday, isTomorrow } from "date-fns";
 import type { Ticket } from "@/types";
@@ -45,9 +46,9 @@ export function TicketCard({ ticket }: TicketCardProps) {
   const statuses = useStore((s) => s.statuses);
   const assignees = useStore((s) => s.assignees);
   const categories = useStore((s) => s.categories);
-  const setSelectedTicketId = useStore((s) => s.setSelectedTicketId);
   const updateTicket = useStore((s) => s.updateTicket);
   const moveTicket = useStore((s) => s.moveTicket);
+  const router = useRouter();
 
   const assignee = assignees.find((a) => a.id === ticket.assigneeId) ?? null;
   const category = categories.find((c) => c.id === ticket.categoryId) ?? null;
@@ -80,7 +81,7 @@ export function TicketCard({ ticket }: TicketCardProps) {
             PRIORITY_BORDER[ticket.priority],
             isDragging && "opacity-50 shadow-lg scale-[1.02]"
           )}
-          onClick={() => setSelectedTicketId(ticket.id)}
+          onClick={() => router.push(`/tickets/${ticket.id}`)}
         >
           <div className="flex items-start gap-2">
             <button
@@ -133,6 +134,13 @@ export function TicketCard({ ticket }: TicketCardProps) {
         </Card>
       </ContextMenuTrigger>
       <ContextMenuContent>
+        <ContextMenuItem
+          onClick={() => router.push(`/tickets/${ticket.id}`)}
+          className="gap-2"
+        >
+          <ExternalLink className="size-4" />
+          Open ticket
+        </ContextMenuItem>
         <ContextMenuSub>
           <ContextMenuSubTrigger>Move to</ContextMenuSubTrigger>
           <ContextMenuSubContent>
